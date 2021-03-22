@@ -12,8 +12,9 @@ classdef link < dynamicprops
       start = 0;
       finish= 0;
       
-      color = 'k';
+      color;
       lineWidth = 1;
+      free = true;
    end
    
    methods

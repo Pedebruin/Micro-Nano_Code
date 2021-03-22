@@ -11,6 +11,7 @@ classdef joint < dynamicprops
       y = 0;
       
       color = 'k';
+      floating = true;
    end
    
    methods

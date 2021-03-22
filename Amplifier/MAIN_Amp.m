@@ -1,4 +1,4 @@
-clear all; close all
+clear all; close all; clc;
 set(0,'defaultTextInterpreter','latex');
 
 %{
@@ -7,125 +7,191 @@ set(0,'defaultTextInterpreter','latex');
     flexture. 
 %}
 
-%% Settings
-% Options
+%% Settings (Put everything in S struct)
+% Plot options
 S.plotLinks = true;
 S.plotJoints = true;
+S.plotNames = true;
 
+% single position plot
+S.singlePosPlot = true;
+S.d_in_single = 0.1;
+
+% animation
+S.animation = true;
+S.doubleStroke = true;
+S.d_in_min = 0;   % min input displacement [mu m] 
+S.d_in_max = 1;   % max input displacement [mu m]
+
+S.T = 0.5;         % Simulation time [s]
+S.n = 100;       % Amount of steps []
 
 
 %% Parameters
 % Material & General properties
+    % None yet
+
+
+% Objects 
+% Fixed joints:
+    % d
+    d = joint;
+    d.name = 'd';
+    d.floating = false;
+    
+    d.x = 3;
+    d.y = 0;
+    
+    % f
+    f = joint;
+    f.name = 'f';
+    f.floating = false;
+    
+    f.x = 2*d.x;
+    f.y = 4;
+    
+    % g
+    g = joint;
+    g.name = 'g';
+    g.floating = false;
+    
+    g.x = 9/10*f.x;
+    g.y = 1.5*f.y; 
+    
 
 % Links:
-    % A
-    A = link;
-    A.name = 'A';
-    A.L = 5;
-
     % B
     B = link;
     B.name = 'B';
+    B.free = true;
     B.L = 4;
     
-    % C
-    C = link;
-    C.name = 'C';
-    C.L = 0;
-    
+    % A         (At a weird place because its length is defined by d and B)
+    Amp = link;
+    Amp.name = 'A';
+    Amp.free = false;
+    Amp.L = sqrt(d.x^2+B.L^2);
+
     % D
     D = link;
     D.name = 'D';
-    D.L = 0;
+    D.free = true;
+    D.L = 3*d.x;
     
-    % E
-    E = link;
-    E.name = 'E';
-    E.L = 0;
+    % C         (At a weird place because its length is defined by D and B)
+    C = link;
+    C.name = 'C';
+    C.free = false;
+    C.L = sqrt(B.L^2+D.L^2);
   
     % F
     F = link;
     F.name = 'F';
-    F.L = 0;
+    F.L = 2*B.L;
+    
+    % E         (At a weird place because its length is defined by F and D)
+    E = link;
+    E.name = 'E';
+    E.free = false;
+    E.L = sqrt((F.L+f.y)^2+(D.L+d.x-f.x)^2);
  
     % G
     G = link;
     G.name = 'G';
-    G.L = 0; 
+    G.free = false;
+    G.L = sqrt((B.L+F.L-g.y)^2+f.x^2); 
     
     % H
     H = link;
     H.name = 'H';
-    H.L = 0;
+    H.L = g.x;
     
     % I
     I = link;
     I.name = 'I';
-    I.L = 0;
+    I.L = f.y+F.L-g.y;
     
     
 % Joints:
     % a
     a = joint;
     a.name = 'a';
-    a.K = 0;
+    a.floating = true;
    
-    
     % b
     b = joint;
     b.name = 'b';
-    b.K = 0;
+    b.floating = true;
     
     % c
     c = joint;
     c.name = 'c';
-    c.K = 0;
+    c.floating = true;
     
-    % d
-    d = joint;
-    d.name = 'd';
-    d.K = 0;
-    
-    d.x = sqrt(A.L^2-B.L^2);
+    % d is fixed, so defined above. 
     
     % e
     e = joint;
     e.name = 'e';
-    e.K = 0;
+    e.floating = true;
     
-    % f
-    f = joint;
-    f.name = 'f';
-    f.K = 0;
-    
-    % g
-    g = joint;
-    g.name = 'g';
-    g.K = 0;
+    % f is fixed, so defined above. 
     
     % h
     h = joint;
     h.name = 'h';
-    h.K = 0;
+    h.floating = true;
     
     % i
     i = joint;
     i.name = 'i';
-    i.K = 0;
-    
-    
-    links = {A,B,C,D,E,F,G,H,I};
+    i.floating = true;
+        
+    links = {Amp,B,C,D,E,F,G,H,I};    % For easy transportation
     joints = {a,b,c,d,e,f,g,h,i};
 
+%% Simulation loop
+if S.singlePosPlot == true
+    figureName = 'Kinematic model';
+    a.y = S.d_in_single;
+    
+    Amp = kinModel_Amp(links,joints,S);
+    [~] = showme_Amp(figureName,links,joints,Amp,S);   
+    a.y = 0;
+end
 
-%% Setup
 
-
-%% Main analysis
-d_in = 1;
-kinModel_Amp(d_in,links,joints);        % Evaluate the kinematic model
-
-figureName = 'Kinematic model';
-Plots = showme_Amp(figureName,links,joints);
-
+if S.animation == true
+    figureName = 'Kinematic model ANIMATION';
+    
+    if S.doubleStroke == true
+        d = linspace(S.d_in_min,S.d_in_max,S.n/2);
+        d = [d linspace(S.d_in_max,S.d_in_min,S.n/2)];
+    else
+        d = linspace(S.d_in_min,S.d_in_max,S.n);
+    end
+    
+    counter = 0;
+    for d_in = d
+        if counter ~= 0
+            delete(Plots(3:end));
+        end
+        
+        tstart = tic;
+        a.y = d_in;                                         % Update input 
+        Amp = kinModel_Amp(links,joints,S);                   % Evaluate the kinematic model
+        Plots = showme_Amp(figureName,links,joints,Amp,S);    % Plot the model
+        
+        
+        if counter == 0
+            disp('Press key to continue when ready');
+            pause;
+        end
+        
+        counter = counter + 1;
+        telapsed = toc;
+        pause(S.T/S.n-telapsed);
+    end
+    
+end
 

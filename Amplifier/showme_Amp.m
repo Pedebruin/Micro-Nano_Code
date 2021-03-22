@@ -1,46 +1,91 @@
-function [plots] = showme_Amp(figureName,links,joints)
+function [plots] = showme_Amp(figureName,links,joints,Amp,S)
 %{
     Function that plots the object given to it. 
 %}
-% Unpack
 [A,B,C,D,E,F,G,H,I] = links{:};
 [a,b,c,d,e,f,g,h,i] = joints{:};
 
+if isempty(findobj('Name',figureName))
+    fig = figure('Name',figureName);
+    ax = axes(fig,'Title',[figureName]);
 
-fig = figure('Name',figureName);
-ax = axes(fig,'Title',[figureName,' ax']);
+    title(figureName);
+    xlabel(ax,'X pos [$$\mu$$m]');
+    ylabel(ax,'Y pos [$$\mu$$m]');
+    xlim(ax,[-5,15]);
+    ylim(ax,[-5,15]);
+    hold on
+else
+    fig = findobj('Name',figureName);
+    ax = findobj('Type','Axes','parent',fig);
+end
 
-title(figureName);
-xlabel(ax,'X pos [$$\mu$$m]');
-ylabel(ax,'Y pos [$$\mu$$m]');
-xlim(ax,[0,10]);
-ylim(ax,[0,10]);
-hold on
+% put plots in nice array, such that they can be exported and deleted in
+% looped function later on.  
+plots = [fig, ax];
 
-
+% Amplification factor
+if isempty(findobj('Type','annotation'))
+    dim = [0.6 0.8 0.1 0.1];
+    str = {['Amplification factor: ', num2str(round(Amp))],...
+            ['Input: ',num2str(round(a.y,2))]};
+    Amp_p = annotation('textbox',dim,'String',str,'FitBoxToText','on');
+    plots = [plots, Amp_p];
+end
 
 % joints
-joints_p = gobjects(1,length(joints));
-joints_text = gobjects(1,length(joints));
-for i = 1:length(joints)
-    joints_p(i) = plot(ax, joints{i}.x, joints{i}.y, 'o', 'color', joints{i}.color);
-    joints_text = text(ax, joints{i}.x+0.05, joints{i}.y, joints{i}.name);
+if S.plotJoints == true
+    joints_p = gobjects(1,length(joints));
+    joints_text = gobjects(1,length(joints));
+    for j = 1:length(joints)
+        if joints{j}.floating == true
+            joints{j}.color = [0, 0.4470, 0.7410];
+        else
+            joints{j}.color = 'r';
+        end
+        
+        joints_p(j) = plot(ax, joints{j}.x, joints{j}.y,...
+                            'o', 'color', joints{j}.color);
+        
+        if S.plotNames == true
+            posx  = joints{j}.x+0.5;
+            posy  = joints{j}.y;
+            joints_text(j) = text(ax, posx,...
+                                    posy,...
+                                    joints{j}.name, 'color', joints{j}.color);
+        end
+    end
+    plots = [plots, joints_p, joints_text];
 end
-    
-% links
 
-links_p = gobjects(1,length(links));
-links_text = gobjects(1,length(links));
-for i = 1:length(links)
-    links_p(i) = plot(ax, [links{i}.start(1), links{i}.finish(1)],...
-                          [links{i}.start(2), links{i}.finish(2)],...
-                        'color', links{i}.color, 'lineWidth', links{i}.lineWidth);
-    links_text(i) = text(ax, mean([links{i}.start(1),links{i}.finish(1)]+0.1),...
-                             mean([links{i}.start(2),links{i}.finish(2)]),...
-                             links{i}.name);
+% links
+if S.plotLinks == true
+    links_p = gobjects(1,length(links));
+    links_text = gobjects(1,length(links));
+    for j = 1:length(links)
+        if links{j}.free == true
+            links{j}.color = [0, 0.4470, 0.7410];
+        else
+            links{j}.color = 'k';
+        end
+        
+        links_p(j) = plot(ax, [links{j}.start(1), links{j}.finish(1)],...
+                                [links{j}.start(2), links{j}.finish(2)],...
+                                'color', links{j}.color, 'lineWidth', links{j}.lineWidth);
+        if S.plotNames == true
+            posx = mean([links{j}.start(1),links{j}.finish(1)]+0.1);
+            posy = mean([links{j}.start(2),links{j}.finish(2)]);
+            links_text(j) = text(ax, posx,...
+                                    posy,...
+                                    links{j}.name,'color',links{j}.color);
+        end
+    end
+    
+    plots = [plots, links_p, links_text];
 end
+
+
 
               
 drawnow;        
-plots = [fig, ax, joints_p, joints_text, joints_p, links_p];
 end
