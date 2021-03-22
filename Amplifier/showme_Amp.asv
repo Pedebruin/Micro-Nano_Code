@@ -28,7 +28,7 @@ hold on
 
 % links
     % A
-    A_p = plot(ax, [a.x b.x], [a.y b.y], 'color', A.color, 'lineWidth', A.lineWidth);
+    A_p = plot(ax, [a.x b.x], [a.y b.y], 'color', A.color, 'lineWidth',B.li);
     
     % B
     B_p = plot(ax, [b.x d.x], [b.y d.y], 'color', B.color, 'lineWidth', B.lineWidth);
@@ -39,7 +39,7 @@ hold on
 
 drawnow;
 Plots = [   fig, ax,...
-            A_p, B_p...
+            A_p,...
             a_p, b_p];
 
 end

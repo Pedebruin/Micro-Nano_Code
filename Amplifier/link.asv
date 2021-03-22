@@ -1,0 +1,16 @@
+classdef link < dynamicprops
+   properties
+      L = 0;
+      w = 6e-6;
+      h = 25e-6;        % General layer height (set by process)
+      
+      x = 0;
+      y = 0;
+      
+      
+   end
+   
+   methods
+       
+   end
+end

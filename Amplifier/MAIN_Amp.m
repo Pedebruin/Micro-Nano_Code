@@ -1,5 +1,6 @@
-clear all
-close all
+clear all; close all
+set(0,'defaultTextInterpreter','latex');
+
 %{
     Created by Pim de Bruin. This analysis purely approximates the design
     kinematically assuming pure rotational joints at the end of each
@@ -7,78 +8,58 @@ close all
 %}
 
 %% Settings
-layerHeight = 25e-6;
-linkWidth = 6e-6;
-
-
-
-
-global A B C D E F G H I a b c d e f g h i
+% Options
+S.plotLinks = true;
+S.plotJoints = true;
 
 
 
 %% Parameters
-% Material properties
+% Material & General properties
+
 % Links:
     % A
     A = link;
-    A.L = 0;
-    A.w = linkWidth;
-    A.h = layerHeight;
-    
+    A.L = 5;
+
     % B
     B = link;
-    B.L = 0;
-    B.w = linkWidth;
-    B.h = layerHeight;
+    B.L = 4;
     
     % C
     C = link;
     C.L = 0;
-    C.w = linkWidth;
-    C.h = layerHeight;
     
     % D
     D = link;
     D.L = 0;
-    D.w = linkWidth;
-    D.h = layerHeight;
     
     % E
     E = link;
     E.L = 0;
-    E.w = linkWidth;
-    E.h = layerHeight;
-    
+  
     % F
     F = link;
     F.L = 0;
-    F.w = linkWidth;
-    F.h = layerHeight;
-    
+ 
     % G
     G = link;
     G.L = 0; 
-    G.w = linkWidth;
-    G.h = layerHeight;
     
     % H
     H = link;
     H.L = 0;
-    H.w = linkWidth;
-    H.h = layerHeight;
     
     % I
     I = link;
     I.L = 0;
-    I.w = linkWidth; 
-    I.h = layerHeight;
     
     
 % Joints:
     % a
     a = joint;
     a.K = 0;
+   
     
     % b
     b = joint;
@@ -91,6 +72,8 @@ global A B C D E F G H I a b c d e f g h i
     % d
     d = joint;
     d.K = 0;
+    
+    d.x = sqrt(A.L^2-B.L^2);
     
     % e
     e = joint;
@@ -113,15 +96,18 @@ global A B C D E F G H I a b c d e f g h i
     i.K = 0;
     
     
+    links = {A,B,C,D,E,F,G,H,I};
+    joints = {a,b,c,d,e,f,g,h,i};
 
 
 %% Setup
 
 
 %% Main analysis
-kinModel_Amp(0);        % Evaluate the kinematic model
+d_in = 0;
+kinModel_Amp(d_in,links,joints);        % Evaluate the kinematic model
 
-figureName = 'Figure plotter test';
-Plots = showme_Amp(figureName);
+figureName = 'Kinematic model';
+Plots = showme_Amp(figureName,links,joints);
 
 
