@@ -1,0 +1,3 @@
+function [] = kinModel_Amp(xin,beams,joints)
+[A,B,C,D,E,F,G,H,I]
+end
