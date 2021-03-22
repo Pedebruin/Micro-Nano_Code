@@ -4,12 +4,13 @@ classdef link < dynamicprops
     %}
     
    properties
+      name;
       L = 0;
       w = 1;            % Initialised width [mum] (just some guess still)
       h = 25;           % General layer height [mum] (set by process)
       
-      x = 0;
-      y = 0;
+      start = 0;
+      finish= 0;
       
       color = 'k';
       lineWidth = 1;
