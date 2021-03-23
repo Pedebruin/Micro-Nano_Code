@@ -1,4 +1,4 @@
-clear all; close all; clc;
+clear all; close all;
 set(0,'defaultTextInterpreter','latex');
 addpath('./functions');
 
@@ -32,13 +32,13 @@ This file is supported by:
 % Plot options                  These are general settings for all plots made. 
 S.plotLinks = true;             % Show the links?
 S.plotJoints = true;            % Show the joints?
-S.plotNames = false;             % Show all the names?
+S.plotNames = true;             % Show all the names?
 S.mirror = false;                % Mirror the mechanism? (more for show)
     S.mirrorOffset = 1;         % Offset the mirrored mechanisms for neatness?
 
 % single position plot          A single plot of the mechanism in desired configuration
 S.singlePosPlot = true;         % Make a plot with a single position?
-    S.d_in_single = 1;        % Input for single position plot
+    S.d_in_single = 0.5;        % Input for single position plot
 
 % animation                     Or would you like to see it move?
 S.animation = true;             % Simulate the mechanism?
@@ -85,6 +85,7 @@ S.animation = true;             % Simulate the mechanism?
     % d
     d.name = 'd';
     d.floating = false;
+    d.children = {B,D};
     
     d.x = 10;
     d.y = 0;
@@ -92,6 +93,7 @@ S.animation = true;             % Simulate the mechanism?
     % f
     f.name = 'f';
     f.floating = false;
+    f.children = {F};
     
     f.x = 3*d.x;
     f.y = 4;
@@ -99,6 +101,7 @@ S.animation = true;             % Simulate the mechanism?
     % g
     g.name = 'g';
     g.floating = false;
+    g.children = {H};
     
     g.x = 9/10*f.x;
     g.y = 2*f.y; 
@@ -108,7 +111,7 @@ S.animation = true;             % Simulate the mechanism?
     % B
     B.name = 'B';
     B.free = true;
-    B.parents = {b,d};    
+    B.parents = {d,b};    
     B.L = 4;
     
     % A         (At a weird place because its length is defined by d and B)
@@ -137,13 +140,13 @@ S.animation = true;             % Simulate the mechanism?
     % E         (At a weird place because its length is defined by F and D)
     E.name = 'E';
     E.free = false;
-    E.parents = {c,e};    
+    E.parents = {e,c};    
     E.L = sqrt((F.L+f.y)^2+(D.L+d.x-f.x)^2);
  
     % G
     G.name = 'G';
     G.free = false;
-    G.parents = {e,h};    
+    G.parents = {h,e};    
     G.L = sqrt((B.L+F.L-g.y)^2+f.x^2); 
     
     % H
@@ -161,31 +164,37 @@ S.animation = true;             % Simulate the mechanism?
     % a
     a.name = 'a';
     a.floating = true;
+    a.children = {A};
     a.x = 0; % Starting at x=0 initially. Changed when needed. 
    
     % b
     b.name = 'b';
     b.floating = true;
+    b.children = {A,B,C};
     
     % c
     c.name = 'c';
     c.floating = true;
+    c.children = {D,C,E};
     
     % d is fixed, so defined above. 
     
     % e
     e.name = 'e';
     e.floating = true;
+    e.children = {G,F,E};
     
     % f is fixed, so defined above. 
     
     % h
     h.name = 'h';
     h.floating = true;
+    h.children = {I,G,H};
     
     % i
     i.name = 'i';
     i.floating = true;
+    i.children = {I};
     i.x = 0; % Assumed to be 0, changed when needed. 
             
 %% Analysis part
@@ -194,10 +203,16 @@ if S.singlePosPlot == true
     figureName = ['Kinematic model, $$d_{in}$$ = ',num2str(S.d_in_single)];
     a.y = S.d_in_single;
     
-    Amp = kinModel_Amp(links,joints,S);
-    [~] = showme_Amp(figureName,links,joints,Amp,S);   
+    S.plotNames = false;
+    P = kinModel_Amp(links,joints,S);
+    [~] = showme_Amp(figureName,links,joints,P,S);   
     clear showme_Amp;
     a.y = 0;        % Put configuration back to original. 
+    
+%     S.plotNames = true;
+%     P = kinModel_Amp(links,joints,S);
+%     [~] = showme_Amp(figureName,links,joints,P,S);
+%     clear showme_Amp;
 end
 
 
@@ -220,9 +235,9 @@ if S.animation == true
         end
         
         tstart = tic;
-        a.y = d_in;                                             % Update input 
-        Amp = kinModel_Amp(links,joints,S);                   % Evaluate the kinematic model
-        Plots = showme_Amp(figureName,links,joints,Amp,S);    % Plot the model
+        a.y = d_in;                                           % Update input 
+        P = kinModel_Amp(links,joints,S);                   % Evaluate the kinematic model
+        Plots = showme_Amp(figureName,links,joints,P,S);    % Plot the model
         
         if counter == 0 && S.pausing == true
             disp('Press key to continue when ready');
@@ -233,10 +248,11 @@ if S.animation == true
         telapsed = toc;
         pause(S.T/S.n-telapsed);
     end
+    clear showme_Amp
 end
 
 %% Clean up handle objects
-for j = 1:length(objects)
-    delete(objects{j});
-end
+% for j = 1:length(objects)
+%     delete(objects{j});
+% end
 

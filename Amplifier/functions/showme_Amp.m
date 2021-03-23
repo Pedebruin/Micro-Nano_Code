@@ -1,21 +1,28 @@
-function [plots] = showme_Amp(figureName,links,joints,Amp,S)
+function [plots] = showme_Amp(figureName,links,joints,P,S)
 %{
-    Function that plots the object given to it taking the settings in S into account.  
+    Function that plots the object given to it taking the settings in S into account. 
+ 
+    Dont forget to clear this function's persistent variables after the
+    last use! otherwise it might interfere with the next required plot. 
 %}
 [A,B,C,D,E,F,G,H,I] = links{:};
 [a,b,c,d,e,f,g,h,i] = joints{:};
+Amp = P(1);
+F = P(2);
 
 % Save the last amplification factors for plotting. 
 if isnan(Amp)
     Amp = 0;
 end
-persistent amp_v input_v output_v
+persistent amp_v input_v output_v F_v
 if isempty(amp_v)
     amp_v = Amp;
+    F_v = F;
     input_v = a.y;
     output_v = i.y - i.y_init;
 else
     amp_v = [amp_v Amp];
+    F_v = [F_v F];
     input_v = [input_v a.y];
     output_v = [output_v i.y-i.y_init]; 
 end
@@ -27,7 +34,7 @@ if isempty(findobj('Name',figureName))
     sgtitle(figureName);
     
         % Visualisation subplot
-        ax1 = subplot(2,3,[1 2 4 5]);
+        ax1 = subplot(2,3,[1 2]);
         hold on
             ax1.Tag = 'ax1';
             ax1.Title.String = 'Visualisation';
@@ -49,9 +56,8 @@ if isempty(findobj('Name',figureName))
             ax2.XColor = 'none';
             ax2.YColor = 'none';
             
-        
         % Amplification factor subplot
-        ax3 = subplot(2,3,6);
+        ax3 = subplot(2,3,4);
         hold on
             ax3.Tag = 'ax3';
             ax3.Title.String = 'Amplification factor';
@@ -61,19 +67,30 @@ if isempty(findobj('Name',figureName))
             ax3.XGrid = 'on';
             ax3.YGrid = 'on';
             
-            
+        % Force guess plot
+        ax4 = subplot(2,3,5);
+        hold on
+            ax4.Tag = 'ax4';
+            ax4.Title.String = 'Crude force estimation';
+            ax4.XLabel.String = 'Input Displacement';
+            ax4.YLabel.String = 'Force [N]';
+            ax4.XLim = [S.d_in_min, S.d_in_max];
+            ax4.XGrid = 'on';
+            ax4.YGrid = 'on';
 
 else
     fig = findobj('Name',figureName);
     ax1 = findobj('Parent',fig,'Tag','ax1');
     ax2 = findobj('Parent',fig,'Tag','ax2');
     ax3 = findobj('Parent',fig,'Tag','ax3');
+    ax4 = findobj('Parent',fig,'Tag','ax4');
 end
 
 % put plots in nice array, such that they can be exported and deleted in
 % looped function later on.  
 %plots = [fig, ax1, ax2];
 plots = [];
+
 
 %% Mirror if asked
 if S.mirror == true
@@ -122,6 +139,7 @@ else
     links_t = links;    % add nothing to the links
 end
 
+
 %% Find interesting stuff
 % maximum x dimension
 xs = zeros(size(joints_t));
@@ -133,32 +151,9 @@ end
 xdim = max(xs)-min(xs);
 ydim = max(ys)-min(ys);
 
+
 %% Start plotting!
-% Data
-if isempty(findobj('Type','annotation'))
-    ax2Pos = get(ax2, 'position');
-    
-    ax2Pos(2) = ax2Pos(2)-0.05;
-    str = {['Amplification: ', num2str(round(Amp))],...
-            ['  Max: ', num2str(round(max(amp_v)))],...
-            ['Input: ',num2str(round(input_v(end),2))],...
-            ['  Max: ',num2str(round(max(input_v),2))],...
-            ['Output: ',num2str(round(output_v(end),2))],...
-            ['  Max: ',num2str(round(max(output_v),2))],...
-            ['X dim: ',num2str(xdim)],...
-            ['Y dim; ',num2str(ydim)]};
-    Amp_p = annotation('textbox',ax2Pos,'String',str,'FitBoxToText','on');
-    plots = [plots, Amp_p];
-end
-
-% Amplification factor
-if size(amp_v) > 1
-    plot(ax3,input_v,amp_v,'k*');
-else
-    plot(ax3,input_v,amp_v,'k-');
-end
-
-% joints
+% ax1: joints
 if S.plotJoints == true
     joints_p = gobjects(1,length(joints_t));        % vector with plotted lines
     joints_text = gobjects(1,length(joints_t));     % vector with plotted text
@@ -183,7 +178,7 @@ if S.plotJoints == true
     plots = [plots, joints_p, joints_text];
 end
 
-% links
+% ax1: links
 if S.plotLinks == true
     links_p = gobjects(1,length(links_t));
     links_text = gobjects(1,length(links_t));
@@ -207,6 +202,34 @@ if S.plotLinks == true
     end
     plots = [plots, links_p, links_text];
 end
+
+% ax2: Data
+if isempty(findobj('Type','annotation'))
+    ax2Pos = get(ax2, 'position');
+    
+    ax2Pos(2) = ax2Pos(2)-0.05;
+    str = {['Amplification: ', num2str(round(Amp))],...
+            ['  Max: ', num2str(round(max(amp_v)))],...
+            ['Input: ',num2str(round(input_v(end),2))],...
+            ['  Max: ',num2str(round(max(input_v),2))],...
+            ['Output: ',num2str(round(output_v(end),2))],...
+            ['  Max: ',num2str(round(max(output_v),2))],...
+            ['X dim: ',num2str(xdim)],...
+            ['Y dim; ',num2str(ydim)]};
+    ann_p = annotation('textbox',ax2Pos,'String',str,'FitBoxToText','on');
+    plots = [plots, ann_p];
+end
+
+% ax3: Amplification factor
+amp_p = plot(ax3,input_v(end),amp_v(end),'ko');
+plot(ax3,input_v,amp_v,'k--');
+plots = [plots, amp_p]; 
+
+% ax4: Force estimation
+F_p = plot(ax4,input_v(end),F_v(end),'ko');
+plot(ax4,input_v,F_v,'k--');
+plots = [plots, F_p];
+
 
 %% Cleanup
 % remove offset since this is changed in the actual handle object. We only
@@ -235,8 +258,6 @@ if S.mirror == true
         delete(jointsm{j});   
     end
 end
-
-
 
 drawnow;        
 end

@@ -16,6 +16,8 @@ classdef joint < dynamicprops & matlab.mixin.Copyable
       color;        % Plot color
       floating = true;  % Is it floating or fixed?
       offset = false;   % Is its position now offset, or not?
+      
+      children;
    end
    
    methods

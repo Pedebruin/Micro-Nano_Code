@@ -1,4 +1,4 @@
-function [Amp] = kinModel_Amp(links, joints, S)
+function P = kinModel_Amp(links, joints, S)
 %{
 This evaluates the kinematic model and updates the angles and positions of
 the joints and link instances and are stored in the instances itself. These can later be plotted. 
@@ -18,8 +18,8 @@ joint_inits = 0;
 for j = 1:length(joints)
     joint_inits = joint_inits + ~isempty(joints{j}.x_init);
 end
-initialised = joint_inits == length(joints) && link_inits == length(links); % Is the initial position already calculated?
 
+initialised = joint_inits == length(joints) && link_inits == length(links); % Is the initial position already calculated?
 if initialised 
     % Just continue with the current configuration. 
     n = 1;
@@ -28,8 +28,7 @@ else
     n = 2;
 end
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%Actual kinematic model script:
+% Actual kinematic model script: %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 for j = 1:n
     %% Make sure the initial position is set correctly at the first evaluation. 
     if n == 2 && j < 2      % First run
@@ -42,6 +41,7 @@ for j = 1:n
         for k = 1:length(links)
             links{k}.start_init = links{k}.start;
             links{k}.finish_init = links{k}.finish;
+            links{k}.slope_init = links{k}.slope;
         end
         % For the joints
         for k = 1:length(joints)
@@ -83,7 +83,7 @@ for j = 1:n
         % i.x is kept at the value it has when it arrives at the kinModel. 
         i.y = h.y + sqrt(I.L^2-h.x^2);
 
-    %% CPut these in link positions 
+    %% Put these in link positions 
     % Just connect the links to each other by means of defining the ending
     % and starting points as the joint locations. 
     
@@ -92,6 +92,11 @@ for j = 1:n
         links{k}.finish = [links{k}.parents{2}.x links{k}.parents{2}.y];
     end
     
+    %% Calculate the angle with x axis
+    for k = 1:length(links)
+        slope = asin((links{k}.finish(2)-links{k}.start(2))/links{k}.L); % dy/dx
+        links{k}.slope = rad2deg(real(round(slope,5)));
+    end
 
     %% Check link lengths!
     % If the calculated and defined lengths do not correspond, a joint
@@ -110,7 +115,31 @@ end
     Amp = (i.y - i.y_init)/a.y;  
 
     
+%% Deformation update
+    % A
+        A.deform = 0; % Negligable i think
+    % B
+        B.deform = abs(B.slope - B.slope_init);
+    % C
+        C.deform = 0; % Negligable i think
+    % D
+        D.deform = abs(D.slope - D.slope_init);
+    % E
+        E.deform = 0; % Negligable i think
+    % F
+        F.deform = abs(F.slope - F.slope_init);
+    % G
+        G.deform = abs(G.slope - G.slope_init) - abs(E.slope - E.slope_init);
+    % H
+        H.deform = abs(H.slope - H.slope_init); % CRUDE
+    % I
+        I.deform = abs(I.slope - I.slope_init); % CRUDE
     
+%% Force calculation
+F = 0;    
+
+
+P = [Amp, F];
 %% Function defenition   
     function [x,y] = intersection(point1, point2, link1, link2)   
         %{
