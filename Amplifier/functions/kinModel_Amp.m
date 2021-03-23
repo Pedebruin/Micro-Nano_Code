@@ -8,19 +8,13 @@ the joints and link instances and are stored in the instances itself. These can 
 [A,B,C,D,E,F,G,H,I] = links{:};
 [a,b,c,d,e,f,g,h,i] = joints{:};
 
-% Get initial i_y position
-if ~isprop(i,'y_init')
-    addprop(i,'y_init');
-    i.y_init = i.y;
-end
-
 %% Links
     %{
     https://math.stackexchange.com/questions/256100/
     how-can-i-find-the-points-at-which-two-circles-intersect
     %}
 % a
-    a.x = 0;
+    % a.x = 0;
     % a.y is defined in the main script, as this is the input. (Yes, you
     % just need to know). 
 % b    
@@ -44,7 +38,7 @@ end
 % h  
     [h.x, h.y] = intersection(g,e,H,G);
 % i
-    i.x = 0;
+    % i.x is kept at the value it has when it arrives at the kinModel. 
     i.y = h.y + sqrt(I.L^2-h.x^2);
     
   %% Joints  
@@ -98,6 +92,12 @@ end
         end
     end
 %% Amplification factor
+
+    % Get initial i_y position
+    if ~isprop(i,'y_init')
+        addprop(i,'y_init');
+        i.y_init = i.y;
+    end
     Amp = (i.y - i.y_init)/a.y;
     
 %% Function defenition   

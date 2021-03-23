@@ -1,4 +1,4 @@
-classdef joint < dynamicprops
+classdef joint < dynamicprops & matlab.mixin.Copyable
     %{
     Handle class for a joint object
     %}
@@ -12,6 +12,7 @@ classdef joint < dynamicprops
       
       color = 'k';
       floating = true;
+      offset = false;
    end
    
    methods

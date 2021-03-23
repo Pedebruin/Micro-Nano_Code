@@ -1,4 +1,4 @@
-classdef link < dynamicprops
+classdef link < dynamicprops & matlab.mixin.Copyable
     %{
     Handle class for a link object
     %}
@@ -15,6 +15,7 @@ classdef link < dynamicprops
       color;
       lineWidth = 1;
       free = true;
+      offset = false;
    end
    
    methods

@@ -1,36 +1,59 @@
 clear all; close all; clc;
 set(0,'defaultTextInterpreter','latex');
+addpath('./functions');
 
 %{
-    Created by Pim de Bruin. This analysis purely approximates the design
-    kinematically assuming pure rotational joints at the end of each
-    flexture. 
+Created by:
+
+Pim de Bruin
+Barbara de Vries
+Jelle Smit
+Pepijn van Esch
+Steijn Nieuwenhuis
+
+This analysis purely approximates the design
+kinematically assuming pure rotational joints at the end of each
+flexture. Its purpose is to find the amplification factor and be able
+to iteratively design the amplifier to required specifications. 
+
+This file is supported by:
+    joint.m
+        The source file for the handle class: 'joint'
+    link.m
+        The source file for the handle class: 'link'
+    kinModel_Amp.m
+        The function file where the kinematic model function is
+        defined. 
+    showme_Amp.m
+        The function file where the plot function is defined. 
 %}
 
 %% Settings (Put everything in S struct)
-% Plot options
-S.plotLinks = true;
-S.plotJoints = true;
-S.plotNames = true;
+% Plot options                  These are general settings for all plots made. 
+S.plotLinks = true;             % Show the links?
+S.plotJoints = true;            % Show the joints?
+S.plotNames = true;             % Show all the names?
+S.mirror = true;                % Mirror the mechanism? (more for show)
+    S.mirrorOffset = 1;         % Offset the mirrored mechanisms for neatness?
 
-% single position plot
-S.singlePosPlot = true;
-S.d_in_single = 0.1;
+% single position plot          A single plot of the mechanism in desired configuration
+S.singlePosPlot = true;         % Make a plot with a single position?
+    S.d_in_single = 0.1;        % Input for single position plot
 
-% animation
-S.animation = true;
-S.doubleStroke = true;
-S.d_in_min = 0;   % min input displacement [mu m] 
-S.d_in_max = 1;   % max input displacement [mu m]
+% animation                     Or would you like to see it move?
+S.animation = true;             % Simulate the mechanism?
+    S.doubleStroke = true;      % Go forwards and backwards, or only forwards?
+    S.pausing = false;          % Pause the animation before it starts for screen recording?
+    S.d_in_min = 0;             % Min input displacement [mu m] 
+    S.d_in_max = 1;             % Max input displacement [mu m]
 
-S.T = 0.5;         % Simulation time [s]
-S.n = 100;       % Amount of steps []
+    S.T = 0.1;                  % Simulation time [tried S, but sim too slow i think]
+    S.n = 100;                  % Amount of animation steps []
 
 
 %% Parameters
 % Material & General properties
     % None yet
-
 
 % Objects 
 % Fixed joints:
@@ -117,6 +140,7 @@ S.n = 100;       % Amount of steps []
     a = joint;
     a.name = 'a';
     a.floating = true;
+    a.x = 0; % Starting at x=0 initially. Changed when needed. 
    
     % b
     b = joint;
@@ -146,21 +170,26 @@ S.n = 100;       % Amount of steps []
     i = joint;
     i.name = 'i';
     i.floating = true;
+    i.x = 0; % Assumed to be 0, changed when needed. 
         
     links = {Amp,B,C,D,E,F,G,H,I};    % For easy transportation
     joints = {a,b,c,d,e,f,g,h,i};
 
-%% Simulation loop
+    
+%% Analysis loop
+% Single plot
 if S.singlePosPlot == true
     figureName = 'Kinematic model';
     a.y = S.d_in_single;
     
     Amp = kinModel_Amp(links,joints,S);
     [~] = showme_Amp(figureName,links,joints,Amp,S);   
-    a.y = 0;
+    clear showme_Amp;
+    a.y = 0;        % Put configuration back to original. 
 end
 
 
+% Animation plot
 if S.animation == true
     figureName = 'Kinematic model ANIMATION';
     
@@ -172,18 +201,18 @@ if S.animation == true
     end
     
     counter = 0;
+    tic;
     for d_in = d
         if counter ~= 0
-            delete(Plots(3:end));
+            delete(Plots);
         end
         
         tstart = tic;
-        a.y = d_in;                                         % Update input 
+        a.y = d_in;                                             % Update input 
         Amp = kinModel_Amp(links,joints,S);                   % Evaluate the kinematic model
         Plots = showme_Amp(figureName,links,joints,Amp,S);    % Plot the model
         
-        
-        if counter == 0
+        if counter == 0 && S.pausing == true
             disp('Press key to continue when ready');
             pause;
         end
