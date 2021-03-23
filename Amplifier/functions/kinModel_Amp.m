@@ -1,4 +1,4 @@
-function [Amp] = kinModel_Amp(links, joints, P)
+function [Amp] = kinModel_Amp(links, joints, S)
 %{
 This evaluates the kinematic model and updates the angles and positions of
 the joints and link instances and are stored in the instances itself. These can later be plotted. 
@@ -8,97 +8,108 @@ the joints and link instances and are stored in the instances itself. These can 
 [A,B,C,D,E,F,G,H,I] = links{:};
 [a,b,c,d,e,f,g,h,i] = joints{:};
 
-%% Links
+%% Check if model is run before
+link_inits = 0;
+for j = 1:length(links)
+    link_inits = link_inits+ ~isempty(links{j}.start_init); 
+end
+
+joint_inits = 0;
+for j = 1:length(joints)
+    joint_inits = joint_inits + ~isempty(joints{j}.x_init);
+end
+initialised = joint_inits == length(joints) && link_inits == length(links); % Is the initial position already calculated?
+
+if initialised 
+    % Just continue with the current configuration. 
+    n = 1;
+else 
+    % First run the script with zero displacement and save the 
+    n = 2;
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%Actual kinematic model script:
+for j = 1:n
+    %% Make sure the initial position is set correctly at the first evaluation. 
+    if n == 2 && j < 2      % First run
+        % Set zero displacement
+        disp_temp = a.y;
+        a.y = 0;
+    elseif n==2 && j == 2   % Second run
+        % Set initial values to just calculated ones. 
+        % For the links
+        for k = 1:length(links)
+            links{k}.start_init = links{k}.start;
+            links{k}.finish_init = links{k}.finish;
+        end
+        % For the joints
+        for k = 1:length(joints)
+            joints{k}.x_init = joints{k}.x;
+            joints{k}.y_init = joints{k}.y; 
+        end
+        
+        % Change a.y back. 
+        a.y = disp_temp; 
+    else                    % Every other run. 
+        % Do exactly nothing :)
+    end
+    
+
+    
+    %% Calculate joint positions
     %{
     https://math.stackexchange.com/questions/256100/
     how-can-i-find-the-points-at-which-two-circles-intersect
     %}
-% a
-    % a.x = 0;
-    % a.y is defined in the main script, as this is the input. (Yes, you
-    % just need to know). 
-% b    
-    [b.x, b.y] = intersection(a,d,A,B);
+    % a
+        % a.y is defined in the main script, as this is the input. (Yes, you
+        % just need to know). 
+    % b    
+        [b.x, b.y] = intersection(a,d,A,B);
+    % c   
+        [c.x, c.y] = intersection(b,d,C,D);
+    % d
+        % d is fixed, thus an easy point. 
+    % e
+        [e.x, e.y] = intersection(f,c,F,E);
+    % f 
+        % f is fixed, thus an easy point. 
+    % g 
+        % g is fixed,  thus an easy point
+    % h  
+        [h.x, h.y] = intersection(g,e,H,G);
+    % i
+        % i.x is kept at the value it has when it arrives at the kinModel. 
+        i.y = h.y + sqrt(I.L^2-h.x^2);
 
-% c   
-    [c.x, c.y] = intersection(b,d,C,D);
+    %% CPut these in link positions 
+    % Just connect the links to each other by means of defining the ending
+    % and starting points as the joint locations. 
+    
+    for k = 1:length(links)
+        links{k}.start = [links{k}.parents{1}.x links{k}.parents{1}.y];
+        links{k}.finish = [links{k}.parents{2}.x links{k}.parents{2}.y];
+    end
+    
 
-% d
-    % d is fixed, thus an easy point. 
-    
-% e
-    [e.x, e.y] = intersection(f,c,F,E);
-    
-% f 
-    % f is fixed, thus an easy point. 
-    
-% g 
-    % g is fixed,  thus an easy point
-    
-% h  
-    [h.x, h.y] = intersection(g,e,H,G);
-% i
-    % i.x is kept at the value it has when it arrives at the kinModel. 
-    i.y = h.y + sqrt(I.L^2-h.x^2);
-    
-  %% Joints  
-  % Just connect the links to each other by means of defining the ending
-  % and starting points as the joint locations. 
-    % A
-    A.start = [a.x, a.y];
-    A.finish = [b.x, b.y];
-    
-    % B
-    B.start = [b.x, b.y];
-    B.finish = [d.x, d.y];
-    
-    % C
-    C.start = [b.x, b.y];
-    C.finish = [c.x, c.y];
-    
-    % D
-    D.start = [d.x, d.y];
-    D.finish = [c.x, c.y];
-    
-    % E
-    E.start = [c.x, c.y];
-    E.finish = [e.x, e.y];
-    
-    % F
-    F.start = [f.x, f.y];
-    F.finish = [e.x, e.y];
-    
-    % G
-    G.start = [e.x, e.y];
-    G.finish = [h.x, h.y];
-    
-    % H
-    H.start = [h.x, h.y];
-    H.finish = [g.x, g.y];
-    
-    % I
-    I.start = [h.x, h.y];
-    I.finish = [i.x, i.y];
-    
-    
-%% Check link lengths!
+    %% Check link lengths!
     % If the calculated and defined lengths do not correspond, a joint
     % position is not calculated properly. 
-    for j = 1:length(links)
-        if round(norm(links{j}.start-links{j}.finish),2) ~= round(links{j}.L,2)
-            warning(['Link ', links{j}.name, ' Is not the correct length!! GO AND FIX IT']);
-            disp(['Defined length: ', num2str(links{j}.L)]);
-            disp(['Calculated length: ', num2str(norm(links{j}.start-links{j}.finish))]);
+    for k = 1:length(links)
+        if round(norm(links{k}.start-links{k}.finish),2) ~= round(links{k}.L,2)
+            warning(['Link ', links{k}.name, ' Is not the correct length!! GO AND FIX IT']);
+            disp(['Defined length: ', num2str(links{k}.L)]);
+            disp(['Calculated length: ', num2str(norm(links{k}.start-links{k}.finish))]);
         end
     end
-%% Amplification factor
+end
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-    % Get initial i_y position
-    if ~isprop(i,'y_init')
-        addprop(i,'y_init');
-        i.y_init = i.y;
-    end
-    Amp = (i.y - i.y_init)/a.y;
+%% Amplification factor
+    Amp = (i.y - i.y_init)/a.y;  
+
+    
     
 %% Function defenition   
     function [x,y] = intersection(point1, point2, link1, link2)   

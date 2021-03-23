@@ -5,14 +5,17 @@ classdef joint < dynamicprops & matlab.mixin.Copyable
     
    properties
       name;
-      K = 0;
+      k = 0;        % Stifness of the joint
       
-      x = 0;
-      y = 0;
+      x;            % x position of the joint
+      y;            % y position of the joint
       
-      color = 'k';
-      floating = true;
-      offset = false;
+      x_init;
+      y_init;
+      
+      color;        % Plot color
+      floating = true;  % Is it floating or fixed?
+      offset = false;   % Is its position now offset, or not?
    end
    
    methods

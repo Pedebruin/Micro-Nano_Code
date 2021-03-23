@@ -9,13 +9,15 @@ function [plots] = showme_Amp(figureName,links,joints,Amp,S)
 if isnan(Amp)
     Amp = 0;
 end
-persistent amp_v input_v
+persistent amp_v input_v output_v
 if isempty(amp_v)
     amp_v = Amp;
     input_v = a.y;
+    output_v = i.y - i.y_init;
 else
     amp_v = [amp_v Amp];
     input_v = [input_v a.y];
+    output_v = [output_v i.y-i.y_init]; 
 end
 
 %% Create figure
@@ -31,8 +33,8 @@ if isempty(findobj('Name',figureName))
             ax1.Title.String = 'Visualisation';
             ax1.XLabel.String = 'X pos [$$\mu$$m]';
             ax1.YLabel.String = 'Y pos [$$\mu$$m]';
-            ax1.XLim = [-5,15];
-            ax1.YLim = [-5,15];
+            ax1.XLim = [-5, c.x_init*1.15];
+            ax1.YLim = [-5, i.y_init*2];
             ax1.XGrid = 'on';
             ax1.YGrid = 'on';
             ax1.DataAspectRatio = [1 1 1];
@@ -114,7 +116,7 @@ if S.mirror == true
     links_t = [links, linksm];          % total links
     
     % Adjust the axes
-    ax1.XLim = [-15 15];
+    ax1.XLim = [-c.x_init*1.15 c.x_init*1.15];
 else
     joints_t = joints;  % add nothing to the joints
     links_t = links;    % add nothing to the links
@@ -138,10 +140,13 @@ if isempty(findobj('Type','annotation'))
     
     ax2Pos(2) = ax2Pos(2)-0.05;
     str = {['Amplification: ', num2str(round(Amp))],...
-            ['Input: ',num2str(round(a.y,2))],...
-            ['Output: ',num2str(round(i.y-i.y_init,2))],...
-            ['Max X dim: ',num2str(xdim)],...
-            ['Max Y dim; ',num2str(ydim)]};
+            ['  Max: ', num2str(round(max(amp_v)))],...
+            ['Input: ',num2str(round(input_v(end),2))],...
+            ['  Max: ',num2str(round(max(input_v),2))],...
+            ['Output: ',num2str(round(output_v(end),2))],...
+            ['  Max: ',num2str(round(max(output_v),2))],...
+            ['X dim: ',num2str(xdim)],...
+            ['Y dim; ',num2str(ydim)]};
     Amp_p = annotation('textbox',ax2Pos,'String',str,'FitBoxToText','on');
     plots = [plots, Amp_p];
 end
@@ -222,13 +227,14 @@ end
 
 % Delete mirrored linkes since they are handle objects. Their scope is
 % larger then this function. 
-for j = 1:length(linksm)
-    delete(linksm{j});
+if S.mirror == true
+    for j = 1:length(linksm)
+        delete(linksm{j});
+    end
+    for j = 1:length(jointsm)
+        delete(jointsm{j});   
+    end
 end
-for j = 1:length(jointsm)
-    delete(jointsm{j});   
-end
-
 
 
 

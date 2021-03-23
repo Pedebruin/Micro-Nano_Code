@@ -32,154 +32,166 @@ This file is supported by:
 % Plot options                  These are general settings for all plots made. 
 S.plotLinks = true;             % Show the links?
 S.plotJoints = true;            % Show the joints?
-S.plotNames = true;             % Show all the names?
-S.mirror = true;                % Mirror the mechanism? (more for show)
+S.plotNames = false;             % Show all the names?
+S.mirror = false;                % Mirror the mechanism? (more for show)
     S.mirrorOffset = 1;         % Offset the mirrored mechanisms for neatness?
 
 % single position plot          A single plot of the mechanism in desired configuration
 S.singlePosPlot = true;         % Make a plot with a single position?
-    S.d_in_single = 0.1;        % Input for single position plot
+    S.d_in_single = 1;        % Input for single position plot
 
 % animation                     Or would you like to see it move?
 S.animation = true;             % Simulate the mechanism?
     S.doubleStroke = true;      % Go forwards and backwards, or only forwards?
     S.pausing = false;          % Pause the animation before it starts for screen recording?
     S.d_in_min = 0;             % Min input displacement [mu m] 
-    S.d_in_max = 1;             % Max input displacement [mu m]
+    S.d_in_max = 1;           % Max input displacement [mu m]
 
     S.T = 0.1;                  % Simulation time [tried S, but sim too slow i think]
     S.n = 100;                  % Amount of animation steps []
 
 
-%% Parameters
+%% Mechanism definition! :O
 % Material & General properties
     % None yet
 
 % Objects 
+    a = joint;
+    b = joint;
+    c = joint;
+    d = joint;
+    e = joint;
+    f = joint;
+    g = joint;
+    h = joint;
+    i = joint;
+    
+    A = link;
+    B = link;
+    C = link;
+    D = link;
+    E = link;
+    F = link;
+    G = link;
+    H = link;
+    I = link; 
+    
+    % For easy transportation
+    links = {A,B,C,D,E,F,G,H,I};    
+    joints = {a,b,c,d,e,f,g,h,i};
+    objects = [links, joints];
+    
 % Fixed joints:
     % d
-    d = joint;
     d.name = 'd';
     d.floating = false;
     
-    d.x = 3;
+    d.x = 10;
     d.y = 0;
     
     % f
-    f = joint;
     f.name = 'f';
     f.floating = false;
     
-    f.x = 2*d.x;
+    f.x = 3*d.x;
     f.y = 4;
     
     % g
-    g = joint;
     g.name = 'g';
     g.floating = false;
     
     g.x = 9/10*f.x;
-    g.y = 1.5*f.y; 
+    g.y = 2*f.y; 
     
 
 % Links:
     % B
-    B = link;
     B.name = 'B';
     B.free = true;
+    B.parents = {b,d};    
     B.L = 4;
     
     % A         (At a weird place because its length is defined by d and B)
-    Amp = link;
-    Amp.name = 'A';
-    Amp.free = false;
-    Amp.L = sqrt(d.x^2+B.L^2);
+    A.name = 'A';
+    A.free = false;
+    A.parents = {a,b};    
+    A.L = sqrt(d.x^2+B.L^2);
 
     % D
-    D = link;
     D.name = 'D';
     D.free = true;
-    D.L = 3*d.x;
+    D.parents = {d,c};    
+    D.L = 4*d.x;
     
     % C         (At a weird place because its length is defined by D and B)
-    C = link;
     C.name = 'C';
     C.free = false;
+    C.parents = {b,c};    
     C.L = sqrt(B.L^2+D.L^2);
   
     % F
-    F = link;
     F.name = 'F';
+    F.parents = {f,e};    
     F.L = 2*B.L;
     
     % E         (At a weird place because its length is defined by F and D)
-    E = link;
     E.name = 'E';
     E.free = false;
+    E.parents = {c,e};    
     E.L = sqrt((F.L+f.y)^2+(D.L+d.x-f.x)^2);
  
     % G
-    G = link;
     G.name = 'G';
     G.free = false;
+    G.parents = {e,h};    
     G.L = sqrt((B.L+F.L-g.y)^2+f.x^2); 
     
     % H
-    H = link;
     H.name = 'H';
+    H.parents =  {h,g};    
     H.L = g.x;
     
     % I
-    I = link;
     I.name = 'I';
-    I.L = f.y+F.L-g.y;
-    
-    
+    I.parents = {h,i};    
+    I.L = (f.y+F.L-g.y)*1.3;
+
+
 % Joints:
     % a
-    a = joint;
     a.name = 'a';
     a.floating = true;
     a.x = 0; % Starting at x=0 initially. Changed when needed. 
    
     % b
-    b = joint;
     b.name = 'b';
     b.floating = true;
     
     % c
-    c = joint;
     c.name = 'c';
     c.floating = true;
     
     % d is fixed, so defined above. 
     
     % e
-    e = joint;
     e.name = 'e';
     e.floating = true;
     
     % f is fixed, so defined above. 
     
     % h
-    h = joint;
     h.name = 'h';
     h.floating = true;
     
     % i
-    i = joint;
     i.name = 'i';
     i.floating = true;
     i.x = 0; % Assumed to be 0, changed when needed. 
-        
-    links = {Amp,B,C,D,E,F,G,H,I};    % For easy transportation
-    joints = {a,b,c,d,e,f,g,h,i};
-
-    
-%% Analysis loop
+            
+%% Analysis part
 % Single plot
 if S.singlePosPlot == true
-    figureName = 'Kinematic model';
+    figureName = ['Kinematic model, $$d_{in}$$ = ',num2str(S.d_in_single)];
     a.y = S.d_in_single;
     
     Amp = kinModel_Amp(links,joints,S);
@@ -194,15 +206,15 @@ if S.animation == true
     figureName = 'Kinematic model ANIMATION';
     
     if S.doubleStroke == true
-        d = linspace(S.d_in_min,S.d_in_max,S.n/2);
-        d = [d linspace(S.d_in_max,S.d_in_min,S.n/2)];
+        d_in_v = linspace(S.d_in_min,S.d_in_max,S.n/2);
+        d_in_v = [d_in_v linspace(S.d_in_max,S.d_in_min,S.n/2)];
     else
-        d = linspace(S.d_in_min,S.d_in_max,S.n);
+        d_in_v = linspace(S.d_in_min,S.d_in_max,S.n);
     end
     
     counter = 0;
     tic;
-    for d_in = d
+    for d_in = d_in_v
         if counter ~= 0
             delete(Plots);
         end
@@ -221,6 +233,10 @@ if S.animation == true
         telapsed = toc;
         pause(S.T/S.n-telapsed);
     end
-    
+end
+
+%% Clean up handle objects
+for j = 1:length(objects)
+    delete(objects{j});
 end
 
