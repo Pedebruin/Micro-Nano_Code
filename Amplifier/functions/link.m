@@ -4,10 +4,18 @@ classdef link < dynamicprops & matlab.mixin.Copyable
     %}
     
    properties
-      name;
-      L;                % Length of the link. 
+      % Beam dimensions & properties (pre-defined)
       w = 1;            % Initialised width [mum] (just some guess still)
-      h = 25;           % General layer height [mum] (set by process)
+      t = 25;           % General layer height [mum] (set by process)
+      E = 90E6;         % E modulus
+      
+      % General properties
+      name;
+      k;                % Bending stifness of the link. 
+      L;                % Length of the link. 
+      
+      
+
       
       start;            % Beginning of the link
       finish;           % Ending of the link (end was taken, so begin-end was no option)

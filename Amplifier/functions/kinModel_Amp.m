@@ -118,27 +118,37 @@ end
     Amp = (i.y - i.y_init)/a.y;  
 
     
-%% Deformation update
+%% Deformation 
+% deform is just the displacement of the tip with respect to the base. 
     % A
-        A.deform = 0; % Negligable i think
+        A.deform = 0; % Negligable i think ??
     % B
-        B.deform = abs(B.slope - B.slope_init);
+        B.deform = b.x - b.x_init;
     % C
-        C.deform = 0; % Negligable i think
+        C.deform = 0; % Negligable i think ??
     % D
-        D.deform = abs(D.slope - D.slope_init);
+        D.deform = c.y_init - c.y;
     % E
         E.deform = 0; % Negligable i think
     % F
-        F.deform = abs(F.slope - F.slope_init);
+        F.deform = e.x - e.x_init;
     % G
-        G.deform = abs(G.slope - G.slope_init) - abs(E.slope - E.slope_init);
+        G.deform = 0; % Maybe Negligable ?? 
     % H
-        H.deform = abs(H.slope - H.slope_init); % CRUDE
+        H.deform = h.y - h.y_init;              % Crude, load case is weird
     % I
-        I.deform = abs(I.slope - I.slope_init); % CRUDE
+        I.deform = h.x - i.x;                   % Crude, load case is weird
     
 %% Force calculation
+
+% Internal potential energy:
+pot_in = 0;
+for k = 1:length(links)
+    pot_in = pot_in + 1/2*links{k}.k*links{k}.deform^2;
+end
+
+
+
 F = 0;    
 
 
