@@ -32,9 +32,9 @@ This file is supported by:
 % Plot options                  These are general settings for all plots made. 
 S.plotLinks = true;             % Show the links?
 S.plotJoints = true;            % Show the joints?
-S.plotNames = true;             % Show all the names?
-S.mirror = false;                % Mirror the mechanism? (more for show)
-    S.mirrorOffset = 1;         % Offset the mirrored mechanisms for neatness?
+S.plotNames = false;             % Show all the names?
+S.mirror = true;                % Mirror the mechanism? (more for show)
+    S.mirrorOffset = 2;         % Offset the mirrored mechanisms for neatness?
 
 % single position plot          A single plot of the mechanism in desired configuration
 S.singlePosPlot = true;         % Make a plot with a single position?
@@ -251,7 +251,7 @@ if S.animation == true
 end
 
 %% Clean up handle objects
-% for j = 1:length(objects)
-%     delete(objects{j});
-% end
+for j = 1:length(objects)
+    delete(objects{j});
+end
 
