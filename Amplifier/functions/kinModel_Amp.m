@@ -30,7 +30,10 @@ end
 
 % Actual kinematic model script: %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 for j = 1:n
-    %% Make sure the initial position is set correctly at the first evaluation. 
+    %% Make sure the initial position is set correctly at the first evaluation.
+    % At the first run of the kinematic model ever, it is evaluated with
+    % zero displacement and the initial positions and slopes are
+    % calculated. These are saved in the objects. 
     if n == 2 && j < 2      % First run
         % Set zero displacement
         disp_temp = a.y;

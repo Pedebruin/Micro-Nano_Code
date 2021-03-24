@@ -33,7 +33,7 @@ This file is supported by:
 S.plotLinks = true;             % Show the links?
 S.plotJoints = true;            % Show the joints?
 S.plotNames = true;             % Show all the names?
-S.mirror = false;                % Mirror the mechanism? (more for show)
+S.mirror = true;                % Mirror the mechanism? (more for show)
     S.mirrorOffset = 1;         % Offset the mirrored mechanisms for neatness?
 
 % single position plot          A single plot of the mechanism in desired configuration
