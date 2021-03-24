@@ -95,10 +95,10 @@ for j = 1:n
         links{k}.finish = [links{k}.parents{2}.x links{k}.parents{2}.y];
     end
     
-    %% Calculate the angle with x axis
+    %% Calculate the angle with x axis (slope)
     for k = 1:length(links)
         slope = asin((links{k}.finish(2)-links{k}.start(2))/links{k}.L); % dy/dx
-        links{k}.slope = rad2deg(real(round(slope,5)));
+        links{k}.slope = real(round(slope,5));
     end
 
     %% Check link lengths!
@@ -140,16 +140,14 @@ end
         I.deform = h.x - i.x;                   % Crude, load case is weird
     
 %% Force calculation
+% UNDER CONSTRUCTION
 
 % Internal potential energy:
-pot_in = 0;
+pot_int = 0;
 for k = 1:length(links)
-    pot_in = pot_in + 1/2*links{k}.k*links{k}.deform^2;
+    pot_int = pot_int + 1/2*links{k}.k*(links{k}.deform*10^-6)^2;
 end
-
-
-
-F = 0;    
+F = pot_int/(a.y*10^-6);  
 
 
 P = [Amp, F];

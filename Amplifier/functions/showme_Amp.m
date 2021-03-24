@@ -5,21 +5,23 @@ function [plots] = showme_Amp(figureName,links,joints,P,S)
     Dont forget to clear this function's persistent variables after the
     last use! otherwise it might interfere with the next required plot. 
 %}
+% Unpack
 [A,B,C,D,E,F,G,H,I] = links{:};
 [a,b,c,d,e,f,g,h,i] = joints{:};
 Amp = P(1);
-F = P(2);
-
-% Save the last amplification factors for plotting. 
-if isnan(Amp)
-    Amp = 0;
+if S.mirror == true
+    F = 2*P(2);
+else
+    F = P(2);
 end
+
+% Save stuff for plotting. 
 persistent amp_v input_v output_v F_v
 if isempty(amp_v)
-    amp_v = Amp;
-    F_v = F;
-    input_v = a.y;
-    output_v = i.y - i.y_init;
+    amp_v = Amp;                        % Amplification factor
+    F_v = F;                            % Force
+    input_v = a.y;                      % Input
+    output_v = i.y - i.y_init;          % Output
 else
     amp_v = [amp_v Amp];
     F_v = [F_v F];
@@ -40,8 +42,8 @@ if isempty(findobj('Name',figureName))
             ax1.Title.String = 'Visualisation';
             ax1.XLabel.String = 'X pos [$$\mu$$m]';
             ax1.YLabel.String = 'Y pos [$$\mu$$m]';
-            ax1.XLim = [-5, c.x_init*1.15];
-            ax1.YLim = [-5, i.y_init*2];
+            ax1.XLim = [-c.x_init*0.1, c.x_init*1.15];
+            ax1.YLim = [-i.y_init*0.5, i.y_init*2];
             ax1.XGrid = 'on';
             ax1.YGrid = 'on';
             ax1.DataAspectRatio = [1 1 1];
@@ -107,6 +109,7 @@ if S.mirror == true
         temp.name = links{j}.name + "'";    % rename to 'linkm'
         temp.start(1) = -links{j}.start(1);    % Mirror start around y axis & Offset
         temp.finish(1) = -links{j}.finish(1);  % Mirror finish around y axis & Offset
+        temp.slope = -links{j}.slope;
         
         linksm{j} = copy(temp);
         delete(temp);
@@ -193,8 +196,9 @@ if S.plotLinks == true
                                 [links_t{j}.start(2), links_t{j}.finish(2)],...
                                 'color', links_t{j}.color, 'lineWidth', links_t{j}.lineWidth);
         if S.plotNames == true
-            posx = mean([links_t{j}.start(1),links_t{j}.finish(1)]+0.1);
-            posy = mean([links_t{j}.start(2),links_t{j}.finish(2)]);
+            POS = 1;        % Distance from line. 
+            posx = mean([links_t{j}.start(1),links_t{j}.finish(1)]+POS*cos(links_t{j}.slope+pi/2));
+            posy = mean([links_t{j}.start(2),links_t{j}.finish(2)]+POS*sin(links_t{j}.slope+pi/2));
             links_text(j) = text(ax1, posx,...
                                     posy,...
                                     links_t{j}.name,'color',links_t{j}.color);

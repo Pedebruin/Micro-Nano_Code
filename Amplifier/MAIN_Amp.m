@@ -38,10 +38,10 @@ S.mirror = false;                % Mirror the mechanism? (more for show)
 
 % single position plot          A single plot of the mechanism in desired configuration
 S.singlePosPlot = true;         % Make a plot with a single position?
-    S.d_in_single = 0;        % Input for single position plot
+    S.d_in_single = 0;          % Input for single position plot
 
 % animation                     Or would you like to see it move?
-S.animation = false;            % Simulate the mechanism?
+S.animation = true;             % Simulate the mechanism?
     S.doubleStroke = true;      % Go forwards and backwards, or only forwards?
     S.pausing = false;          % Pause the animation before it starts for screen recording?
     S.d_in_min = 0;             % Min input displacement [mu m] 
@@ -87,84 +87,84 @@ S.animation = false;            % Simulate the mechanism?
     d.floating = false;
     d.children = {B,D};
     
-    d.x = 10;
-    d.y = 0;
+    d.x = 10;                                                   %-> Tunable
+    d.y = 0;                                                    %-> Tunable
     
     % f
     f.name = 'f';
     f.floating = false;
     f.children = {F};
     
-    f.x = 3*d.x;
-    f.y = 4;
+    f.x = 3*d.x;                                                %-> Tunable
+    f.y = 4;                                                    %-> Tunable
     
     % g
     g.name = 'g';
     g.floating = false;
     g.children = {H};
     
-    g.x = 9/10*f.x;
-    g.y = 2*f.y; 
+    g.x = 9/10*f.x;                                             %-> Tunable
+    g.y = 2*f.y;                                                %-> Tunable
     
 
 % Links:
     % B
     B.name = 'B';
     B.parents = {d,b};   
-    B.L = 4;
-    B.k = (3*Em*B.t*B.w^3)/(12*B.L^3);   % Normal load case
+    B.L = 4;                                                    %-> Tunable
+    B.k = (3*Em*B.t*B.w^3)/(12*B.L^3)*10^-6;   % Normal load case [N/m]
     
     % A         (At a weird place because its length is defined by d and B)
     A.name = 'A';
     A.free = false;
     A.parents = {a,b};    
     A.L = sqrt(d.x^2+B.L^2);
-    A.k = (3*Em*A.t*A.w^3)/(12*A.L^3);   % Normal load case
+    A.k = (3*Em*A.t*A.w^3)/(12*A.L^3)*10^-6;   % Normal load case [N/m]
 
     % D
     D.name = 'D';
     D.parents = {d,c};    
-    D.L = 4*d.x;
-    D.k = (3*Em*D.t*D.w^3)/(12*D.L^3);   % Normal load case
+    D.L = 4*d.x;                                                %-> Tunable
+    D.k = (3*Em*D.t*D.w^3)/(12*D.L^3)*10^-6;   % Normal load case [N/m]
     
     % C         (At a weird place because its length is defined by D and B)
     C.name = 'C';
     C.free = false;
     C.parents = {b,c};    
     C.L = sqrt(B.L^2+D.L^2);
-    C.k = (3*Em*C.t*C.w^3)/(12*C.L^3);   % Not normal load case, but guess. 
+    C.k = (3*Em*C.t*C.w^3)/(12*C.L^3)*10^-6;   % Not normal load case, but guess. [N/m]
   
     % F
     F.name = 'F';
     F.parents = {f,e};    
-    F.L = 2*B.L;
-    F.k = (3*Em*F.t*F.w^3)/(12*F.L^3);   % Normal load case
+    F.L = 2*B.L;                                                %-> Tunable
+    F.k = (3*Em*F.t*F.w^3)/(12*F.L^3)*10^-6;   % Normal load case [N/m]
     
     % E         (At a weird place because its length is defined by F and D)
     E.name = 'E';
     E.free = false;
     E.parents = {e,c};    
     E.L = sqrt((F.L+f.y)^2+(D.L+d.x-f.x)^2);
-    E.k = (3*Em*E.t*E.w^3)/(12*E.L^3);   % Not normal load case, but crude guess. 
+    E.k = (3*Em*E.t*E.w^3)/(12*E.L^3)*10^-6;   % Not normal load case, but crude guess. [N/m]
     
     % G
     G.name = 'G';
     G.free = false;
     G.parents = {h,e};    
     G.L = sqrt((B.L+F.L-g.y)^2+f.x^2); 
-    G.k = (3*Em*G.t*G.w^3)/(12*G.L^3);   % Not normal load case, but crude guess.
+    G.k = (3*Em*G.t*G.w^3)/(12*G.L^3)*10^-6;   % Not normal load case, but crude guess. [N/m]
     
     % H
     H.name = 'H';
     H.parents =  {h,g}; 
-    H.L = g.x;
-    H.k = (3*Em*H.t*H.w^3)/(12*H.L^3);   % Normal load case
+    H.L = g.x;                                                  %-> Tunable
+    H.k = (3*Em*H.t*H.w^3)/(12*H.L^3)*10^-6;   % Normal load case [N/m]
     
     % I
     I.name = 'I';
     I.parents = {h,i};    
     I.L = (f.y+F.L-g.y)*1.3;
-    I.k = (3*Em*I.t*I.w^3)/(12*I.L^3);  % Not normal load case, but crude guess. 
+    I.k = (3*Em*I.t*I.w^3)/(12*I.L^3)*10^-6;  % Not normal load case, but crude guess. [N/m]
 
 
 % Joints:
