@@ -31,11 +31,22 @@ classdef link < dynamicprops & matlab.mixin.Copyable
       lineWidth = 1;    % width of the line of the plot (can be a function of the thickness)
       free = true;      % Is it free to choose the length?
       offset = false;   % Is its position now offset, or not?
+      mirrorOffset = false; % Offset for mirroring?
       
       parents;          % Cell array with handles to its parents :o
    end
    
    methods
+       function rotate(obj,rot)
+           R = [cos(rot), sin(rot); 
+               -sin(rot), cos(rot)];
+           obj.start = obj.start*R;
+           obj.finish = obj.finish*R;
+       end
        
+       function translate(obj,trans)
+           obj.start = obj.start + trans;
+           obj.finish = obj.finish + trans;
+       end
    end
 end

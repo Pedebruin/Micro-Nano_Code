@@ -1,4 +1,4 @@
-function P = kinModel_Amp(links, joints, S)
+function P = kinModel_Amp(links, joints, d_in)
 %{
 This evaluates the kinematic model and updates the angles and positions of
 the joints and link instances and are stored in the instances itself. These can later be plotted. 
@@ -7,6 +7,11 @@ the joints and link instances and are stored in the instances itself. These can 
 % Unpack
 [A,B,C,D,E,F,G,H,I] = links{:};
 [a,b,c,d,e,f,g,h,i] = joints{:};
+
+if isempty(d_in) % If no input is given, assume it to be zero
+    d_in = 0; 
+end
+a.y = d_in;
 
 %% Check if model is run before
 link_inits = 0;
@@ -150,7 +155,11 @@ end
 F = pot_int/(a.y*10^-6);  
 
 
-P = [Amp, F];
+P = [Amp, F, d_in];
+
+
+
+
 %% Function defenition   
     function [x,y] = intersection(point1, point2, link1, link2)   
         %{
