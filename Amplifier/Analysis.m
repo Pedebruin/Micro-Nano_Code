@@ -36,7 +36,7 @@ This file is supported by:
 S.plotLinks = true;             % Show the links?
 S.plotJoints = true;            % Show the joints?
 S.plotNames = true;             % Show all the names?
-S.mirror = true;               % Mirror the mechanism? (more for show)
+S.mirror = false;               % Mirror the mechanism? (more for show)
     S.mirrorOffset = 10;         % Offset the mirrored mechanisms for neatness?
 S.Offset = [0 0];              % Move figure?
 S.Rotation = deg2rad(0);        % Rotate figure?
@@ -55,7 +55,6 @@ S.animation = true;             % Simulate the mechanism?
 
     S.T = 0.1;                  % Simulation time [tried S, but sim too slow i think]
     S.n = 50;                  % Amount of animation steps []
-
 
 %% Make the mechanism!
 % Everything you are looking fore is in this function! (alld efinitions,
@@ -100,8 +99,7 @@ if S.animation == true
             delete(Plots);
         end          
         Plots = showme_Amp(figureName,links,joints,P,S);    % Plot the model
-        
-      
+
         if counter == 0 && S.pausing == true
             disp('Press key to continue when ready');
             pause;
