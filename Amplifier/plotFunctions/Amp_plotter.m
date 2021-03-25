@@ -3,13 +3,13 @@ function plots = Amp_plotter(figureName,axTag, links, joints,S)
 [a,b,c,d,e,f,g,h,i] = joints{:};
 
 %% Find/make figure
-if isempty(findobj('tag',axTag))
+if isempty(findobj('tag',[axTag,figureName]))
     % Overall figure
     fig = figure('Name',figureName);
         % Visualisation
         ax = gca;
         hold on
-            ax.Tag = axTag;
+            ax.Tag = [axTag,figureName];
             ax.Title.String = axTag;
             ax.XLabel.String = 'X pos [$$\mu$$m]';
             ax.YLabel.String = 'Y pos [$$\mu$$m]';
@@ -23,7 +23,7 @@ if isempty(findobj('tag',axTag))
             ax.DataAspectRatio = [1 1 1];
             ax.PlotBoxAspectRatio = [1 1 1];
 else
-    ax = findobj('Type','Axes','Tag',axTag);
+    ax = findobj('Type','Axes','Tag',[axTag, figureName]);
 end
 
 %% Mirror

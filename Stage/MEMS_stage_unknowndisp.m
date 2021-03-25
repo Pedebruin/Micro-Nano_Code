@@ -124,7 +124,7 @@ figure('Name','Matlab Design');
 grid on
 axis equal
 ax = gca;                                                                       %
-ax.Tag = 'ax1';                                                                 %
+ax.Tag = ['ax1','Matlab Design'];                                                                 %
 patch(siliconx,silicony,'w')
 hold on
 plot(origin(1),origin(2),'r*') 

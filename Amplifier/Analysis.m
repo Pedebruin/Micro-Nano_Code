@@ -1,7 +1,7 @@
 clear all; close all;
 set(0,'defaultTextInterpreter','latex');
 addpath('./functions');
-addpath('./functions/plotFunctions');
+addpath('./plotFunctions');
 
 %{
 Created by:
@@ -69,15 +69,15 @@ objects = [links, joints];
 
 %% Analysis part
 % Single plot
-% if S.singlePosPlot == true
-%     figureName = ['Kinematic model, $$d_{in}$$ = ',num2str(S.d_in_single)];
-%     d_in = S.d_in_single;
-%     
-%     P = kinModel_Amp(links,joints,d_in);
-%     [~] = showme_Amp(figureName,links,joints,P,S);   
-%     clear showme_Amp;
-%     a.y = 0;        % Put configuration back to original. 
-% end
+if S.singlePosPlot == true
+    figureName = ['Kinematic model, $$d_{in}$$ = ',num2str(S.d_in_single)];
+    d_in = S.d_in_single;
+    
+    P = kinModel_Amp(links,joints,d_in);
+    [~] = showme_Amp(figureName,links,joints,P,S);   
+    clear showme_Amp;
+    a.y = 0;        % Put configuration back to original. 
+end
 
 
 % Animation plot

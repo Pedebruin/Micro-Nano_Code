@@ -17,7 +17,7 @@ if isempty(findobj('Name',figureName))
         % Visualisation subplot
         ax1 = subplot(2,3,[1 2]);
         hold on
-            ax1.Tag = 'ax1';
+            ax1.Tag = ['ax1',figureName];
             ax1.Title.String = 'Visualisation';
             ax1.XLabel.String = 'X pos [$$\mu$$m]';
             ax1.YLabel.String = 'Y pos [$$\mu$$m]';
@@ -34,7 +34,7 @@ if isempty(findobj('Name',figureName))
         % Data box
         ax2 = subplot(2,3,3);
         hold on
-            ax2.Tag = 'ax2';
+            ax2.Tag = ['ax2',figureName];
             ax2.Title.String = 'Data';
             ax2.Color = 'none';
             ax2.XColor = 'none';
@@ -43,7 +43,7 @@ if isempty(findobj('Name',figureName))
         % Amplification factor subplot
         ax3 = subplot(2,3,4);
         hold on
-            ax3.Tag = 'ax3';
+            ax3.Tag = ['ax3',figureName];
             ax3.Title.String = 'Amplification factor';
             ax3.XLabel.String = 'Input Displacement';
             ax3.YLabel.String = 'Inst. Amp';
@@ -54,7 +54,7 @@ if isempty(findobj('Name',figureName))
         % Force guess plot
         ax4 = subplot(2,3,5);
         hold on
-            ax4.Tag = 'ax4';
+            ax4.Tag = ['ax4',figureName];
             ax4.Title.String = 'Crude force estimation';
             ax4.XLabel.String = 'Input Displacement';
             ax4.YLabel.String = 'Force [N]';

@@ -15,13 +15,13 @@ else
     d_in_v = [d_in_v d_in];
 end
 
-if isempty(findobj('tag',axTag))
+if isempty(findobj('tag',[axTag, figureName]))
     % Overall figure
     fig = figure('Name',figureName);
         % Visualisation
         ax = gca;
         hold on
-            ax.Tag = 'ax4';
+            ax.Tag = [axTag, figureName];
             ax.Title.String = 'Crude force estimation';
             ax.XLabel.String = 'Input Displacement';
             ax.YLabel.String = 'Force [N]';
@@ -29,7 +29,7 @@ if isempty(findobj('tag',axTag))
             ax.XGrid = 'on';
             ax.YGrid = 'on';
 else
-    ax = findobj('Type','Axes','Tag',axTag);
+    ax = findobj('Type','Axes','Tag',[axTag, figureName]);
 end
 
 % Actual plot

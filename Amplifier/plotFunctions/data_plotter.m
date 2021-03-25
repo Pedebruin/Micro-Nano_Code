@@ -15,18 +15,18 @@ else
     output_v = [output_v output];
 end
 
-if isempty(findobj('tag',axTag))
+if isempty(findobj('tag',[axTag, figureName]))
     % Overall figure
     fig = figure('Name',figureName);
         ax = gca;
         hold on
-            ax.Tag = 'ax2';
+            ax.Tag = [axTag, figureName];
             ax.Title.String = 'Data';
             ax.Color = 'none';
             ax.XColor = 'none';
             ax.YColor = 'none';       
 else
-    ax = findobj('Type','Axes','Tag',axTag);
+    ax = findobj('Type','Axes','Tag',[axTag, figureName]);
 end
 
 % find stuff out

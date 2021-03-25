@@ -1,5 +1,4 @@
 function [links, joints] = makeMechanism_Amp(S)
-delete classes
 % This file creates all handle objects necessary for the mechanism. 
 %% Mechanism definition! :O
 % Material & General properties

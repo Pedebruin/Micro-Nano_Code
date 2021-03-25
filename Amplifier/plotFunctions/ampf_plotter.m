@@ -12,13 +12,13 @@ else
     d_in_v = [d_in_v d_in];
 end
 
-if isempty(findobj('tag',axTag))
+if isempty(findobj('tag',[axTag, figureName]))
     % Overall figure
     fig = figure('Name',figureName);
         % Visualisation
         ax = gca;
         hold on
-            ax.Tag = 'ax3';
+            ax.Tag = [axTag, figureName];
             ax.Title.String = 'Amplification factor';
             ax.XLabel.String = 'Input Displacement';
             ax.YLabel.String = 'Inst. Amp';
@@ -26,7 +26,7 @@ if isempty(findobj('tag',axTag))
             ax.XGrid = 'on';
             ax.YGrid = 'on';
 else
-    ax = findobj('Tag','ax3');
+    ax = findobj('Tag',[axTag, figureName]);
 end
 plots = plot(ax,d_in_v(end),amp_v(end),'ko');
 plot(ax,d_in_v,amp_v,'k--');
