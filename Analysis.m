@@ -38,23 +38,23 @@ kinematics of the design.
     beamLength = 0.815e-3;          % [m]
   
 % Define the hexagonal stage
-    A = [0, 1]'*s;
-    B = [-cosd(30), sind(30)]'*s;
-    C = [-cosd(30), -sind(30)]'*s;
-    D = [0, -1]'*s;
-    E = [cosd(30), -sind(30)]'*s;
-    F = [cosd(30), sind(30)]'*s;
-    stagePos0 = [A, B, C, D, E, F];
+    A0 = [0, 1]'*s;
+    B0 = [-cosd(30), sind(30)]'*s;
+    C0 = [-cosd(30), -sind(30)]'*s;
+    D0 = [0, -1]'*s;
+    E0 = [cosd(30), -sind(30)]'*s;
+    F0 = [cosd(30), sind(30)]'*s;
+    stagePos0 = [A0, B0, C0, D0, E0, F0];
 
 % ankers
-    a = A + beamLength*[1, 0]';
-    c = C + beamLength*[-cosd(60), sind(60)]';
-    e = E + beamLength*[-sind(30), -cosd(30)]';
+    a = A0 + beamLength*[1, 0]';
+    c = C0 + beamLength*[-cosd(60), sind(60)]';
+    e = E0 + beamLength*[-sind(30), -cosd(30)]';
 
 % actuator lengths
-    aL0 = A-a;
-    cL0 = C-c;
-    eL0 = E-e;
+    aL0 = A0-a;
+    cL0 = C0-c;
+    eL0 = E0-e;
 
 % deform
     R = [cosd(theta), -sind(theta);
@@ -62,8 +62,11 @@ kinematics of the design.
     
     stagePos = R*stagePos0+[x, y]'; % First rotate, then translate!
     A1 = stagePos(:,1);
+    B1 = stagePos(:,2);
     C1 = stagePos(:,3);
+    D1 = stagePos(:,4);
     E1 = stagePos(:,5);
+    F1 = stagePos(:,6);
 
 % new lengths
     aL1 = A1-a;
@@ -74,13 +77,24 @@ kinematics of the design.
     Aactuation = norm(aL1)-norm(aL0);
     Cactuation = norm(cL1)-norm(cL0);
     Eactuation = norm(eL1)-norm(eL0);
+  
+% Angular deformations of joints connecting stage
+    Aang(1) = angDiff(aL1, aL0);
+    Aang(2) = angDiff(aL1, A1 - F1) - angDiff(aL0, A0 - F0);    
+    
+    Cang(1) = angDiff(cL1, cL0);
+    Cang(2) = angDiff(cL1, C1 - B1) - angDiff(cL0, C0 - B0);
+    
+    Eang(1) = angDiff(eL1, eL0);
+    Eang(2) = angDiff(eL1, E1 - D1) - angDiff(eL0, E0 - D0);
+
 
 % Get Max displacement for design purposes
     overshoot = 0.1;    % Overshoot over max displacement (safeguard)
     delta = max([Aactuation, Cactuation, Eactuation, 61e-6])*(1+overshoot);    % Required displacement
     
     
-%% Flextures %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Flextures %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %{
 -> Calculate the approximate stiffness one actuator experiences based on quick
 MEMS. This does not take the stiffness of the beams connecting the stage
@@ -96,27 +110,40 @@ found.
     L = 1150e-6;        % Length of the bending beams [m]
     n = 2;              % Number of folded flextures in parallel (now two per side)
     
-% Stiffness
+% Stiffness folded flexures
     % Surface moment of intertia
-    I = 1/12*t*w^3;
+    I_beam = 1/12*t*w^3;
 
     % Beam stiffness
-    k_beam = 12*Em*I/L^3;
+    k_beam = 12*Em*I_beam/L^3;
 
     % Total stiffness
-    k_total = n*2/3*k_beam;
+    k_foldedF = n*2/3*k_beam;
 
-% Calculate minimal gap spacing of beams in flexure
-    d_min = 3/4*delta;    
+% Stiffness support flexure hinges
+    w_hinge = 4e-6;
+    L_hinge = 40e-6;
+    t_hinge = t;
     
-% Forces (Stiffness is augmented with estimation from FEM). 
-    AF = 2*(k_total * Aactuation + 3.6279e-05*theta);
-    CF = 2*(k_total * Cactuation + 3.6279e-05*theta);
-    EF = 2*(k_total * Eactuation + 3.6279e-05*theta);
+    I_hinge = 1/12*t_hinge*w_hinge^3;
+    k_hinge = Em*I_hinge/L_hinge;   % Based on rotation! (M = k*theta)
+   
+% Forces of actuators (assuming superposition!)
+    % Internal potential energy per actuator
+    AV = 1/2 * (k_foldedF * Aactuation^2 + k_hinge * norm(deg2rad(Aang))^2);
+    CV = 1/2 * (k_foldedF * Cactuation^2 + k_hinge * norm(deg2rad(Cang))^2);
+    EV = 1/2 * (k_foldedF * Eactuation^2 + k_hinge * norm(deg2rad(Eang))^2);
+
+    % Vinternal = 1/2*Force*displacement;
+    AF = 2*AV/Aactuation;
+    CF = 2*CV/Cactuation;
+    EF = 2*EV/Eactuation;
 
 % Get max force for design purposes
     F_max = max([AF, CF, EF]);      % Maxium required force
-
+    
+% Calculate minimal gap spacing of beams in flexure
+    d_min = 3/4*delta; 
 
 %% Electrostatic actuation %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %{
@@ -154,9 +181,9 @@ found.
 
 % Original
     p{4} = patch(ax, stagePos0(1,:),stagePos0(2,:),'k');       % Original
-    p{5} = plot(ax, [A(1), a(1)], [A(2), a(2)],'k');
-    p{6} = plot(ax, [C(1), c(1)], [C(2), c(2)],'k');
-    p{7} = plot(ax, [E(1), e(1)], [E(2), e(2)],'k');
+    p{5} = plot(ax, [A0(1), a(1)], [A0(2), a(2)],'k');
+    p{6} = plot(ax, [C0(1), c(1)], [C0(2), c(2)],'k');
+    p{7} = plot(ax, [E0(1), e(1)], [E0(2), e(2)],'k');
 
 % Displaced
     p{8} = patch(ax, stagePos(1,:),stagePos(2,:),'k');         % Displaced
@@ -205,7 +232,7 @@ fprintf(['------------------ RESULTS ------------------\n',...
 fprintf(['Flexures:\n',...
          '        k_total = %4.3f [N/m] \n',...
          '          d_min = %4.3f [um] \n',...
-         '\n'], k_total, d_min*10^6)  
+         '\n'], k_foldedF, d_min*10^6)  
      
 % Strokes    
 fprintf(['Kinematics & Actuator forces: \n',...
@@ -222,3 +249,12 @@ fprintf(['Minimal actuator dimensions:\n',...
          '      n_fingers = %4.3f [-]\n',...
          '          F_max = %4.3f [mN]\n',...
          '\n'],n_fingers,F_max_actuator*10^3); 
+     
+%% Function defenitions %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%    
+ function ang = angDiff(u,v)
+    if size(u,1) == 2 && size(v,1)== 2
+        u = [u; 0];
+        v = [v; 0];
+    end
+    ang = rad2deg(atan2(norm(cross(u,v)),dot(u,v)));
+ end
