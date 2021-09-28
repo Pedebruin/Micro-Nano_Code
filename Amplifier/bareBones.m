@@ -1,6 +1,9 @@
 clear all
 close all
 
+addpath('./functions');
+addpath('./plotFunctions');
+
 % Plot options                  These are general settings for all plots made. 
 S.plotLinks = true;             % Show the links?
 S.plotJoints = true;            % Show the joints?
@@ -12,6 +15,6 @@ S.Meters = true;                % DONT FORGET TO ADJUST THE MIRROR OFFSET
 
 
 [links, joints] = makeMechanism_Amp(S);
-d_in = 1e-6; % Give input
+d_in = 0e-6; % Give input
 [~] = kinModel_Amp(links, joints, d_in);
 plots = Amp_plotter('test','testax',links,joints,S);
