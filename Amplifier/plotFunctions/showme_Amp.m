@@ -86,7 +86,5 @@ plots = [plots ampf];
 
 % ax4: Force estimation
 force_p = force_plotter(figureName, 'ax4',P,S);
-plots = [plots force_p];
-
-drawnow;        
+plots = [plots force_p];      
 end

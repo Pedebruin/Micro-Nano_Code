@@ -36,7 +36,7 @@ This file is supported by:
 S.plotLinks = true;             % Show the links?
 S.plotJoints = true;            % Show the joints?
 S.plotNames = true;             % Show all the names?
-S.mirror = false;               % Mirror the mechanism? (more for show)
+S.mirror = true;               % Mirror the mechanism? (more for show)
     S.mirrorOffset = 10;         % Offset the mirrored mechanisms for neatness?
 S.Offset = [0 0];              % Move figure?
 S.Rotation = deg2rad(0);        % Rotate figure?

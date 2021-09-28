@@ -23,9 +23,9 @@ set(0,'defaultTextInterpreter','latex');
     t = 25e-6;          % Height of the layer [m]
     
     % Requirements! 
-    x = 17e-6;          % Required X position
-    y = 17e-6;          % Required Y position
-    theta = 2.6;          % Required rotation
+    x = 16e-6;          % Required X position (reality 0.5 less)
+    y = 16e-6;          % Required Y position (reality 0.5 less)
+    theta = 2.2;        % Required rotation   (reality 0.08 less)
 
     
 %% Stage kinematics %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -35,7 +35,7 @@ kinematics of the design.
 %}
     Alpha = 30;                     % degrees
     s = 0.782669e-3;                % [m]
-    beamLength = 0.815e-3;          % [m]
+    beamLength = 0.688e-3;          % [m]
   
 % Define the hexagonal stage
     A0 = [0, 1]'*s;
@@ -79,15 +79,14 @@ kinematics of the design.
     Eactuation = norm(eL1)-norm(eL0);
   
 % Angular deformations of joints connecting stage
-    Aang(1) = angDiff(aL1, aL0);
-    Aang(2) = angDiff(aL1, A1 - F1) - angDiff(aL0, A0 - F0);    
+    Aang(1) = angDiff(aL1, aL0);                                % close to flexures
+    Aang(2) = angDiff(aL1, A1 - F1) - angDiff(aL0, A0 - F0);    % close to stage
     
     Cang(1) = angDiff(cL1, cL0);
     Cang(2) = angDiff(cL1, C1 - B1) - angDiff(cL0, C0 - B0);
     
     Eang(1) = angDiff(eL1, eL0);
     Eang(2) = angDiff(eL1, E1 - D1) - angDiff(eL0, E0 - D0);
-
 
 % Get Max displacement for design purposes
     overshoot = 0.1;    % Overshoot over max displacement (safeguard)
@@ -121,20 +120,26 @@ found.
     k_foldedF = n*2/3*k_beam;
 
 % Stiffness support flexure hinges
-    w_hinge = 4e-6;
-    L_hinge = 40e-6;
+    w_hinge1 = 4e-6;
+    w_hinge2 = 3e-6;
+    L_hinge = 40e-6;    % 40 without fillets
     t_hinge = t;
     
-    I_hinge = 1/12*t_hinge*w_hinge^3;
-    k_hinge = Em*I_hinge/L_hinge;   % Based on rotation! (M = k*theta)
+    Ktheta = 1.5; % From lumped compliance guess. (Lecture 5 slide 16 compliant)
+    
+    I_hinge1 = 1/12*t_hinge*w_hinge1^3;
+    I_hinge2 = 1/12*t_hinge*w_hinge2^3;
+    
+    k_hinge1 = Ktheta*Em*I_hinge1/L_hinge;   % Based on rotation! (M = k*theta)
+    k_hinge2 = Ktheta*Em*I_hinge2/L_hinge;   % Based on rotation! (M = k*theta)
    
 % Forces of actuators (assuming superposition!)
     % Internal potential energy per actuator
-    AV = 1/2 * (k_foldedF * Aactuation^2 + k_hinge * norm(deg2rad(Aang))^2);
-    CV = 1/2 * (k_foldedF * Cactuation^2 + k_hinge * norm(deg2rad(Cang))^2);
-    EV = 1/2 * (k_foldedF * Eactuation^2 + k_hinge * norm(deg2rad(Eang))^2);
+    AV = 1/2 * (k_foldedF * Aactuation^2 + k_hinge1 * deg2rad(Aang(1))^2 + k_hinge2 * deg2rad(Aang(2))^2);
+    CV = 1/2 * (k_foldedF * Cactuation^2 + k_hinge1 * deg2rad(Cang(1))^2 + k_hinge2 * deg2rad(Cang(2))^2);
+    EV = 1/2 * (k_foldedF * Eactuation^2 + k_hinge1 * deg2rad(Eang(1))^2 + k_hinge2 * deg2rad(Eang(2))^2);
 
-    % Vinternal = 1/2*Force*displacement;
+    % V internal = 1/2*Force*displacement; (Assume linear total stiffness).
     AF = 2*AV/Aactuation;
     CF = 2*CV/Cactuation;
     EF = 2*EV/Eactuation;
@@ -152,11 +157,15 @@ found.
 % Dimensions
     w_actuator = 3.0*10^(-6);   % Finger width [m]
     g = 2.0*10^(-6);            % Gap width [m]
-    Lmax = 60*10^(-6);          % Some length [m]
+    Lmax = 62*10^(-6);          % Some length [m]
     V = 80;                     % Potential difference [V]
     
     gt = 1/3*delta;             % Gap to avoid stiction [m]
+    
+    initial_overlap = 2*10^(-6);  
     l_overlap = Lmax-gt;        % Length of total overlap [m]
+    Lteeth_prefered = initial_overlap + gt + delta; % with possible 10 percent overshoot
+    Lteeth_min = initial_overlap + max([Aactuation, Cactuation, Eactuation, 61e-6])*3/2; % in length teeth without 10 percent overshoot
     p = t;
     
 % Minimum amount of fingers? (Rough approximation)
